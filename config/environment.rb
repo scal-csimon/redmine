@@ -1,3 +1,6 @@
+
+# ENV['RAILS_ENV'] ||= 'development'
+
 # frozen_string_literal: true
 
 # Load the Rails application
