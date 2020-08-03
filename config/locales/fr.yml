@@ -1300,25 +1300,21 @@ fr:
   label_display_type_board: "Tableau"
   label_my_bookmarks: "Favoris"
   label_import_time_entries: "Importer des temps passés"
-  field_toolbar_language_options: Code highlighting toolbar languages
-  label_user_mail_notify_about_high_priority_issues_html: Also notify me about issues
-    with a priority of <em>%{prio}</em> or higher
-  label_assign_to_me: Assign to me
-  notice_issue_not_closable_by_open_tasks: This issue cannot be closed because it has
-    at least one open subtask.
+  field_toolbar_language_options: Code mis en évidence barre d'outils de langues
+  label_user_mail_notify_about_high_priority_issues_html: Informez-moi également des problèmes
+    avec une priorité de <em>%{prio}</em> ou plus
+  label_assign_to_me: Attribuez-moi
+  notice_issue_not_closable_by_open_tasks: Ce problème ne peut pas être résolu car il a au moins une sous-tâche d' ouverte.
   notice_issue_not_closable_by_blocking_issue: This issue cannot be closed because it
     is blocked by at least one open issue.
-  notice_issue_not_reopenable_by_closed_parent_issue: This issue cannot be reopened
-    because its parent issue is closed.
-  error_bulk_download_size_too_big: These attachments cannot be bulk downloaded because
-    the total file size exceeds the maximum allowed size (%{max_size})
-  setting_bulk_download_max_size: Maximum total size for bulk download
-  label_download_all_attachments: Download all files
-  error_attachments_too_many: This file cannot be uploaded because it exceeds the maximum
-    number of files that can be attached simultaneously (%{max_number_of_files})
-  setting_email_domains_allowed: Allowed email domains
-  setting_email_domains_denied: Disallowed email domains
-  field_passwd_changed_on: Password last changed
-  label_relations_mapping: Relations mapping
-  label_import_users: Import users
-  label_days_to_html: "%{days} days up to %{date}"
+  notice_issue_not_reopenable_by_closed_parent_issue: Ce problème ne peut pas être réouvert car son problème parent est fermé.
+  error_bulk_download_size_too_big: Ces pièces jointes ne peuvent pas être téléchargées en masse car la taille totale du fichier dépasse la taille maximale autorisée (%{max_size})
+  setting_bulk_download_max_size: Taille totale maximale pour le téléchargement groupé
+  label_download_all_attachments: Téléchargez tous les fichiers
+  error_attachments_too_many: Ce fichier ne peut pas être téléchargé car il dépasse le maximum nombre de fichiers pouvant être joints simultanément (%{max_number_of_files})
+  setting_email_domains_allowed: Domaines de messagerie autorisés
+  setting_email_domains_denied: Domaines de messagerie non autorisés
+  field_passwd_changed_on: Dernière modification du mot de passe
+  label_relations_mapping: Relations de mappage
+  label_import_users: Importer des utilisateurs
+  label_days_to_html: "%{days} jours jusqu'à %{date}"
