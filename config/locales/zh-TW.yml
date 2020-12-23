@@ -1382,3 +1382,55 @@
   label_relations_mapping: 關聯對應
   label_import_users: 匯入用戶
   label_days_to_html: "%{days} 天，最多至 %{date}"
+  setting_twofa: 雙因素驗證
+  label_optional: 選用項
+  label_required_lower: 必要項
+  button_disable: 關閉
+  twofa__totp__name: 驗證器應用程式
+  twofa__totp__text_pairing_info_html: 掃描這個 QR code 或將純文字金鑰輸入至 TOTP 應用程式
+    (例如 <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) 並將其顯示的代碼輸入至下面的欄位中, 以啟用雙因素驗證.
+  twofa__totp__label_plain_text_key: 純文字金鑰
+  twofa__totp__label_activate: 啟用驗證器應用程式
+  twofa_currently_active: '目前使用中: %{twofa_scheme_name}'
+  twofa_not_active: 尚未啟用
+  twofa_label_code: 代碼
+  twofa_hint_disabled_html: 設定為 <strong>%{label}</strong> 將會停用並解除所有用戶已配對之雙因素驗證裝置.
+  twofa_hint_required_html: 設定為 <strong>%{label}</strong> 將會要求所有用戶於下次登入時, 設置雙因素驗證.
+  twofa_label_setup: 開啟雙因素驗證
+  twofa_label_deactivation_confirmation: 關閉雙因素驗證
+  twofa_notice_select: '請選擇您想要使用的雙因素配置方式:'
+  twofa_warning_require: 管理員要求您開啟雙因素驗證.
+  twofa_activated: 雙因素驗證已開啟成功. 建議您為自己的帳戶 <a data-method="post" href="%{bc_path}">產生備用代碼</a>.
+  twofa_deactivated: 雙因素驗證已關閉.
+  twofa_mail_body_security_notification_paired: 雙因素驗證已使用 %{field} 開啟成功.
+  twofa_mail_body_security_notification_unpaired: 您帳戶的雙因素驗證已關閉.
+  twofa_mail_body_backup_codes_generated: 新雙因素驗證的備用代碼已產生.
+  twofa_mail_body_backup_code_used: 有個雙因素驗證的備用代碼被使用.
+  twofa_invalid_code: 代碼是無效的或過期的.
+  twofa_label_enter_otp: 請輸入您的雙因素驗證代碼.
+  twofa_too_many_tries: 重試次數過多.
+  twofa_resend_code: 重送代碼
+  twofa_code_sent: 有個驗證代碼已經傳送給您.
+  twofa_generate_backup_codes: 產生備用代碼
+  twofa_text_generate_backup_codes_confirmation: 這會將所有現存的備用代碼設為無效, 並產生新的備用代碼. 您要繼續嗎?
+  twofa_notice_backup_codes_generated: 您的備用代碼已產生.
+  twofa_warning_backup_codes_generated_invalidated: 新的備用代碼已產生. 您現存的備用代碼, 從 %{time} 起已經失效.
+  twofa_label_backup_codes: 雙因素驗證備用代碼
+  twofa_text_backup_codes_hint: 當您無法存取雙因素配置方式取得單次密碼時, 使用這些替代備用代碼. 每個代碼僅能被使用一次. 建議您將備用代碼列印出來, 並存放於安全的地點.
+  twofa_text_backup_codes_created_at: 備用代碼產生於 %{datetime}.
+  twofa_backup_codes_already_shown: 這些備用代碼不會再次出現, 再次需要時請重新 <a data-method="post" href="%{bc_path}">產生新的備用代碼</a>.
+  error_can_not_execute_macro_html: 執行 <strong>%{name}</strong> 巨集時, 發生錯誤 (%{error})
+  error_macro_does_not_accept_block: 此巨集不接受文字區塊
+  error_childpages_macro_no_argument: 缺少引數, 此巨集只能從 wiki 頁面中被呼叫
+  error_circular_inclusion: 偵測到循環引入內容
+  error_page_not_found: 找不到頁面
+  error_filename_required: 必須填入檔案名稱
+  error_invalid_size_parameter: 無效的尺寸大小參數
+  error_attachment_not_found: 找不到附件檔案 %{name}
+  permission_delete_project: 刪除專案
+  field_twofa_scheme: 雙因素驗證配置
+  text_user_destroy_confirmation: 您是否確定要刪除這個用戶並且移除該用戶所有的參照? 這是無法被復原的動作. 通常鎖定一個用戶是比較好的方案, 而非將用戶刪除. 若要確認, 請在下面輸入用戶的帳戶名稱 (%{login}).
+  text_project_destroy_enter_identifier: 若要確認, 請在下面輸入專案的代碼 (%{identifier}).
+  button_add_subtask: 新增子任務

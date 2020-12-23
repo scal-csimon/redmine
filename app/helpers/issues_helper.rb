@@ -84,9 +84,6 @@ module IssuesHelper
     end
     s << '<div>'
     subject = h(issue.subject)
-    if issue.is_private?
-      subject = subject + ' ' + content_tag('span', l(:field_is_private), :class => 'badge badge-private private')
-    end
     s << content_tag('h3', subject)
     s << '</div>' * (ancestors.size + 1)
     s.html_safe
@@ -103,15 +100,17 @@ module IssuesHelper
       css << " idnt idnt-#{level}" if level > 0
       buttons =
         if manage_relations
-          link_to(l(:label_delete_link_to_subtask),
-                  issue_path(
-                    {:id => child.id, :issue => {:parent_issue_id => ''},
-                     :back_url => issue_path(issue.id), :no_flash => '1'}),
-                  :method => :put,
-                  :data => {:confirm => l(:text_are_you_sure)},
-                  :title => l(:label_delete_link_to_subtask),
-                  :class => 'icon-only icon-link-break'
-                  )
+          link_to(
+            l(:label_delete_link_to_subtask),
+            issue_path(
+              {:id => child.id, :issue => {:parent_issue_id => ''},
+               :back_url => issue_path(issue.id), :no_flash => '1'}
+            ),
+            :method => :put,
+            :data => {:confirm => l(:text_are_you_sure)},
+            :title => l(:label_delete_link_to_subtask),
+            :class => 'icon-only icon-link-break'
+          )
         else
           "".html_safe
         end
@@ -134,7 +133,7 @@ module IssuesHelper
                          (if child.disabled_core_fields.include?('done_ratio')
                             ''
                           else
-                             progress_bar(child.done_ratio)
+                            progress_bar(child.done_ratio)
                           end),
                          :class=> 'done_ratio') +
              content_tag('td', buttons, :class => 'buttons'),
@@ -175,11 +174,12 @@ module IssuesHelper
                         false, :id => nil),
                       :class => 'checkbox') +
              content_tag('td',
-                         relation.to_s(@issue) {|other|
+                         relation.to_s(@issue) do |other|
                            link_to_issue(
                              other,
-                             :project => Setting.cross_project_issue_relations?)
-                         }.html_safe,
+                             :project => Setting.cross_project_issue_relations?
+                           )
+                         end.html_safe,
                          :class => 'subject') +
              content_tag('td', other_issue.status, :class => 'status') +
              content_tag('td', link_to_user(other_issue.assigned_to), :class => 'assigned_to') +
@@ -235,11 +235,17 @@ module IssuesHelper
 
   # Returns a link for adding a new subtask to the given issue
   def link_to_new_subtask(issue)
+    link_to(l(:button_add), url_for_new_subtask(issue))
+  end
+
+  def url_for_new_subtask(issue)
     attrs = {
       :parent_issue_id => issue
     }
     attrs[:tracker_id] = issue.tracker unless issue.tracker.disabled_core_fields.include?('parent_issue_id')
-    link_to(l(:button_add), new_project_issue_path(issue.project, :issue => attrs, :back_url => issue_path(issue)))
+    params = {:issue => attrs}
+    params[:back_url] = issue_path(issue) if controller_name == 'issues' && action_name == 'show'
+    new_project_issue_path(issue.project, params)
   end
 
   def trackers_options_for_select(issue)
@@ -527,7 +533,7 @@ module IssuesHelper
       label = l(relation_type[:name]) if relation_type
     end
     call_hook(:helper_issues_show_detail_after_setting,
-              {:detail => detail, :label => label, :value => value, :old_value => old_value })
+              {:detail => detail, :label => label, :value => value, :old_value => old_value})
 
     label ||= detail.prop_key
     value ||= detail.value
@@ -623,13 +629,55 @@ module IssuesHelper
     if @journals.present?
       journals_without_notes = @journals.select{|value| value.notes.blank?}
       journals_with_notes = @journals.reject{|value| value.notes.blank?}
-
-      tabs << {:name => 'history', :label => :label_history, :onclick => 'showIssueHistory("history", this.href)', :partial => 'issues/tabs/history', :locals => {:issue => @issue, :journals => @journals}}
-      tabs << {:name => 'notes', :label => :label_issue_history_notes, :onclick => 'showIssueHistory("notes", this.href)'} if journals_with_notes.any?
-      tabs << {:name => 'properties', :label => :label_issue_history_properties, :onclick => 'showIssueHistory("properties", this.href)'} if journals_without_notes.any?
+      tabs <<
+        {
+          :name => 'history',
+          :label => :label_history,
+          :onclick => 'showIssueHistory("history", this.href)',
+          :partial => 'issues/tabs/history',
+          :locals => {:issue => @issue, :journals => @journals}
+        }
+      if journals_with_notes.any?
+        tabs <<
+          {
+            :name => 'notes',
+            :label => :label_issue_history_notes,
+            :onclick => 'showIssueHistory("notes", this.href)'
+          }
+      end
+      if journals_without_notes.any?
+        tabs <<
+          {
+            :name => 'properties',
+            :label => :label_issue_history_properties,
+            :onclick => 'showIssueHistory("properties", this.href)'
+          }
+      end
     end
-    tabs << {:name => 'time_entries', :label => :label_time_entry_plural, :remote => true, :onclick => "getRemoteTab('time_entries', '#{tab_issue_path(@issue, :name => 'time_entries')}', '#{issue_path(@issue, :tab => 'time_entries')}')"} if User.current.allowed_to?(:view_time_entries, @project) && @issue.spent_hours > 0
-    tabs << {:name => 'changesets', :label => :label_associated_revisions, :remote => true, :onclick => "getRemoteTab('changesets', '#{tab_issue_path(@issue, :name => 'changesets')}', '#{issue_path(@issue, :tab => 'changesets')}')"} if @has_changesets
+    if User.current.allowed_to?(:view_time_entries, @project) && @issue.spent_hours > 0
+      tabs <<
+        {
+          :name => 'time_entries',
+          :label => :label_time_entry_plural,
+          :remote => true,
+          :onclick =>
+            "getRemoteTab('time_entries', " \
+            "'#{tab_issue_path(@issue, :name => 'time_entries')}', " \
+            "'#{issue_path(@issue, :tab => 'time_entries')}')"
+        }
+    end
+    if @has_changesets
+      tabs <<
+        {
+          :name => 'changesets',
+          :label => :label_associated_revisions,
+          :remote => true,
+          :onclick =>
+            "getRemoteTab('changesets', " \
+            "'#{tab_issue_path(@issue, :name => 'changesets')}', " \
+            "'#{issue_path(@issue, :tab => 'changesets')}')"
+        }
+    end
     tabs
   end
 
@@ -648,5 +696,4 @@ module IssuesHelper
       user_default_tab
     end
   end
-
 end

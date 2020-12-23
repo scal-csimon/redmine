@@ -117,12 +117,13 @@ class IssuesHelperTest < Redmine::HelperTest
   end
 
   test 'show_detail with a start_date attribute should format the dates' do
-    detail = JournalDetail.new(
-               :property  => 'attr',
-               :old_value => '2010-01-01',
-               :value     => '2010-01-31',
-               :prop_key  => 'start_date'
-            )
+    detail =
+      JournalDetail.new(
+        :property  => 'attr',
+        :old_value => '2010-01-01',
+        :value     => '2010-01-31',
+        :prop_key  => 'start_date'
+      )
     with_settings :date_format => '%m/%d/%Y' do
       assert_match "01/31/2010", show_detail(detail, true)
       assert_match "01/01/2010", show_detail(detail, true)
@@ -130,12 +131,13 @@ class IssuesHelperTest < Redmine::HelperTest
   end
 
   test 'show_detail with a due_date attribute should format the dates' do
-    detail = JournalDetail.new(
-              :property  => 'attr',
-              :old_value => '2010-01-01',
-              :value     => '2010-01-31',
-              :prop_key  => 'due_date'
-            )
+    detail =
+      JournalDetail.new(
+        :property  => 'attr',
+        :old_value => '2010-01-01',
+        :value     => '2010-01-31',
+        :prop_key  => 'due_date'
+      )
     with_settings :date_format => '%m/%d/%Y' do
       assert_match "01/31/2010", show_detail(detail, true)
       assert_match "01/01/2010", show_detail(detail, true)
@@ -357,5 +359,12 @@ class IssuesHelperTest < Redmine::HelperTest
       issue.save!
       assert_equal '06/06/2019', issue_due_date_details(issue)
     end
+  end
+
+  def test_url_for_new_subtask
+    issue = Issue.find(1)
+    params = {:issue => {:parent_issue_id => issue.id, :tracker_id => issue.tracker.id}}
+    assert_equal new_project_issue_path(issue.project, params),
+                 url_for_new_subtask(issue)
   end
 end

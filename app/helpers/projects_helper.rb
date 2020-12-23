@@ -73,8 +73,12 @@ module ProjectsHelper
 
   # Renders the projects index
   def render_project_hierarchy(projects)
+    bookmarked_project_ids = User.current.bookmarked_project_ids
     render_project_nested_lists(projects) do |project|
-      s = link_to_project(project, {}, :class => "#{project.css_classes} #{User.current.member_of?(project) ? 'icon icon-user my-project' : nil}")
+      classes = project.css_classes.split
+      classes += %w(icon icon-user my-project) if User.current.member_of?(project)
+      classes += %w(icon icon-bookmarked-project) if bookmarked_project_ids.include?(project.id)
+      s = link_to_project(project, {}, :class => classes.uniq.join(' '))
       if project.description.present?
         s << content_tag('div', textilizable(project.short_description, :project => project), :class => 'wiki description')
       end
@@ -84,7 +88,7 @@ module ProjectsHelper
 
   # Returns a set of options for a select field, grouped by project.
   def version_options_for_select(versions, selected=nil)
-    grouped = Hash.new {|h,k| h[k] = []}
+    grouped = Hash.new {|h, k| h[k] = []}
     versions.each do |version|
       grouped[version.project.name] << [version.name, version.id]
     end
@@ -162,6 +166,7 @@ module ProjectsHelper
 
   def bookmark_link(project, user = User.current)
     return '' unless user && user.logged?
+
     @jump_box ||= Redmine::ProjectJumpBox.new user
     bookmarked = @jump_box.bookmark?(project)
     css = +"icon bookmark "

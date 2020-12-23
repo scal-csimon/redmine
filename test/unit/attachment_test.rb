@@ -235,6 +235,23 @@ class AttachmentTest < ActiveSupport::TestCase
     assert_not_equal a1.diskfile, a2.diskfile
   end
 
+  def test_identical_attachments_created_in_same_transaction_should_not_end_up_unreadable
+    attachments = []
+    Project.transaction do
+      3.times do
+        a = Attachment.create!(
+          :container => Issue.find(1), :author => User.find(1),
+          :file => mock_file(:filename => 'foo', :content => 'abcde')
+        )
+        attachments << a
+      end
+    end
+    attachments.each do |a|
+      assert a.readable?
+    end
+    assert_equal 1, attachments.map(&:diskfile).uniq.size
+  end
+
   def test_filename_should_be_basenamed
     a = Attachment.new(:file => mock_file(:original_filename => "path/to/the/file"))
     assert_equal 'file', a.filename
@@ -381,12 +398,15 @@ class AttachmentTest < ActiveSupport::TestCase
 
   def test_update_attachments
     attachments = Attachment.where(:id => [2, 3]).to_a
-
-    assert Attachment.update_attachments(attachments, {
-      '2' => {:filename => 'newname.txt', :description => 'New description'},
-      3 => {:filename => 'othername.txt'}
-    })
-
+    assert(
+      Attachment.update_attachments(
+        attachments,
+        {
+          '2' => {:filename => 'newname.txt', :description => 'New description'},
+          3 => {:filename => 'othername.txt'}
+        }
+      )
+    )
     attachment = Attachment.find(2)
     assert_equal 'newname.txt', attachment.filename
     assert_equal 'New description', attachment.description
@@ -397,23 +417,29 @@ class AttachmentTest < ActiveSupport::TestCase
 
   def test_update_attachments_with_failure
     attachments = Attachment.where(:id => [2, 3]).to_a
-
-    assert !Attachment.update_attachments(attachments, {
-      '2' => {:filename => '', :description => 'New description'},
-      3 => {:filename => 'othername.txt'}
-    })
-
+    assert(
+      !Attachment.update_attachments(
+        attachments,
+        {
+          '2' => {
+            :filename => '', :description => 'New description'
+          },
+          3 => {:filename => 'othername.txt'}
+        }
+      )
+    )
     attachment = Attachment.find(3)
     assert_equal 'logo.gif', attachment.filename
   end
 
   def test_update_attachments_should_sanitize_filename
     attachments = Attachment.where(:id => 2).to_a
-
-    assert Attachment.update_attachments(attachments, {
-      2 => {:filename => 'newname?.txt'},
-    })
-
+    assert(
+      Attachment.update_attachments(
+        attachments,
+        {2 => {:filename => 'newname?.txt'},}
+      )
+    )
     attachment = Attachment.find(2)
     assert_equal 'newname_.txt', attachment.filename
   end

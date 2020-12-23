@@ -122,6 +122,7 @@ html>body #content { min-height: 600px; }
 #login-form input[type=text], #login-form input[type=password] {margin-bottom: 15px;}
 #login-form a.lost_password {float:right; font-weight:normal;}
 #login-form input#openid_url {background:#fff url(../images/openid-bg.gif) no-repeat 4px 50%; padding-left:24px !important;}
+#login-form h3 {text-align: center;}
 
 div.modal { border-radius:5px; background:#fff; z-index:50; padding:4px;}
 div.modal h3.title {display:none;}
@@ -464,7 +465,7 @@ div.square {
 .splitcontenttop {flex: 2; flex-basis: 100%;}
 
 form {display: inline;}
-input:not([type="file"]), select, button {vertical-align: middle; margin-top: 1px; margin-bottom: 1px; height: 24px; padding: 0 7px;}
+input, select, button {vertical-align: middle; margin-top: 1px; margin-bottom: 1px; height: 24px; padding: 0 7px;}
 input, select, textarea, button { color: #333; background-color: #fff; border:1px solid #ccc; border-radius:3px; box-sizing: border-box;}
 select {
   -webkit-appearance: none;
@@ -478,7 +479,7 @@ select {
   background-position: calc(100% - 7px) 50%;
   padding-right: 20px;
 }
-input[type="file"] {border: 0; padding-left: 0; padding-right: 0; background-color: initial; }
+input[type="file"] {border: 0; padding-left: 0; padding-right: 0; height: initial; background-color: initial; }
 input[type="submit"], button[type="submit"] {
   -webkit-appearance: button;
   cursor: pointer;
@@ -694,7 +695,13 @@ ul.projects div.description li {list-style-type:initial;}
 #projects-index ul.projects div.description {
   padding-top: 0.5em;
 }
-#projects-index a.icon-user {padding-left:0; padding-right:20px; background-position:98% 50%;}
+#projects-index a.icon-user, a.icon-bookmarked-project {padding-left:0; padding-right:20px; background-position:98% 50%;}
+#projects-index a.icon-user.icon-bookmarked-project {
+  background-image: url(../images/tag_blue.png), url(../images/user.png);
+  background-position: bottom 0px right 0px, bottom 0px right 20px;
+  padding-right: 40px;
+  padding-top: 4px;
+}
 
 #notified-projects>ul, #tracker_project_ids>ul, #custom_field_project_ids>ul {max-height:250px; overflow-y:auto;}
 
@@ -793,6 +800,10 @@ html>body .tabular p {overflow:hidden;}
 
 .tabular input, .tabular select {max-width:95%}
 .tabular textarea {width:95%; resize:vertical;}
+input#twofa_code, img#twofa_code { width: 140px; }
+ul.twofa_backup_codes { list-style-type: none; padding: 0; display: inline-block; }
+ul.twofa_backup_codes li { float: left; }
+ul.twofa_backup_codes li:nth-child(odd) { float: left; clear: left; padding-right: 4em; }
 
 .tabular label{
   font-weight: bold;
@@ -1440,6 +1451,7 @@ td.gantt_selected_column .gantt_hdr,.gantt_selected_column_container {
 .badge-private {
   background: #d22;
   color: #fff;
+  border: 1px solid #d22;
 }
 .badge-count {
   color: #fff;
@@ -1561,6 +1573,7 @@ td.gantt_selected_column .gantt_hdr,.gantt_selected_column_container {
 .icon-collapsed { background-image: url(../images/arrow_right.png); }
 .icon-bookmark { background-image: url(../images/tag_blue_delete.png); }
 .icon-bookmark-off { background-image: url(../images/tag_blue_add.png); }
+.icon-bookmarked-project { background-image: url(../images/tag_blue.png); }
 .icon-sorted-asc { background-image: url(../images/arrow_down.png); }
 .icon-sorted-desc { background-image: url(../images/arrow_up.png); }
 .icon-toggle-plus { background-image: url(../images/bullet_toggle_plus.png) }

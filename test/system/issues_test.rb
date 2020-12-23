@@ -305,7 +305,7 @@ class IssuesSystemTest < ApplicationSystemTestCase
     assert page.has_css?('#context-menu .issue-bulk-watcher.icon-fav-off')
     assert_difference 'Watcher.count', 2 do
       within('#context-menu') do
-        click_link 'Watch'
+        find_link('Watch').hover.click
       end
       # wait for ajax response
       assert page.has_css?('#context-menu .issue-bulk-watcher.icon-fav')
@@ -441,6 +441,8 @@ class IssuesSystemTest < ApplicationSystemTestCase
       click_link 'Copy'
     end
     assert_current_path '/issues/bulk_edit', :ignore_query => true
+    submit_buttons = page.all('input[type=submit]')
+    assert_equal 'Copy', submit_buttons[0].value
 
     page.find('#issue_project_id').select('OnlineStore')
     # wait for ajax response
@@ -517,9 +519,7 @@ class IssuesSystemTest < ApplicationSystemTestCase
     click_on 'CSV'
     click_on 'Export'
 
-    # https://github.com/SeleniumHQ/selenium/issues/5292
-    # if issues.csv exists, Chrome creates issues (1).csv, issues (2).csv ...
-    csv = CSV.read(downloaded_file("issues*.csv"))
+    csv = CSV.read(downloaded_file("issues.csv"))
     subject_index = csv.shift.index('Subject')
     subjects = csv.map {|row| row[subject_index]}
     assert_equal subjects.sort, subjects

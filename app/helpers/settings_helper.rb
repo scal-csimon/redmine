@@ -43,6 +43,7 @@ module SettingsHelper
 
   def render_settings_error(errors)
     return if errors.blank?
+
     s = ''.html_safe
     errors.each do |name, message|
       s << content_tag('li', content_tag('b', l("setting_#{name}")) + " " + message)
@@ -79,11 +80,11 @@ module SettingsHelper
         content_tag(
           'label',
           check_box_tag(
-             "settings[#{setting}][]",
-             value,
-             setting_values.include?(value),
-             :id => nil
-           ) + text.to_s,
+            "settings[#{setting}][]",
+            value,
+            setting_values.include?(value),
+            :id => nil
+          ) + text.to_s,
           :class => (options[:inline] ? 'inline' : 'block')
         )
       end.join.html_safe
@@ -138,20 +139,20 @@ module SettingsHelper
 
   def session_lifetime_options
     options = [[l(:label_disabled), 0]]
-    options += [4, 8, 12].map {|hours|
+    options += [4, 8, 12].map do |hours|
       [l('datetime.distance_in_words.x_hours', :count => hours), (hours * 60).to_s]
-    }
-    options += [1, 7, 30, 60, 365].map {|days|
+    end
+    options += [1, 7, 30, 60, 365].map do |days|
       [l('datetime.distance_in_words.x_days', :count => days), (days * 24 * 60).to_s]
-    }
+    end
     options
   end
 
   def session_timeout_options
     options = [[l(:label_disabled), 0]]
-    options += [1, 2, 4, 8, 12, 24, 48].map {|hours|
+    options += [1, 2, 4, 8, 12, 24, 48].map do |hours|
       [l('datetime.distance_in_words.x_hours', :count => hours), (hours * 60).to_s]
-    }
+    end
     options
   end
 
@@ -208,7 +209,7 @@ module SettingsHelper
   def date_format_setting_options(locale)
     Setting::DATE_FORMATS.map do |f|
       today = ::I18n.l(User.current.today, :locale => locale, :format => f)
-      format = f.gsub('%', '').gsub(/[dmY]/) do
+      format = f.delete('%').gsub(/[dmY]/) do
         {'d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy'}[$&]
       end
       ["#{today} (#{format})", f]

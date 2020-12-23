@@ -750,6 +750,25 @@ class ProjectsControllerTest < Redmine::ControllerTest
     assert_select 'table.issue-report td.total a', :text => %r{\A[1-9]\d*\z}
   end
 
+  def test_show_should_not_display_subprojects_trackers_when_subprojects_issues_is_not_displayed
+    project = Project.find('ecookbook')
+    tracker = project.trackers.find_by(name: 'Support request')
+    project.trackers.delete(tracker)
+    @request.session[:user_id] = 2
+
+    with_settings :display_subprojects_issues => '1' do
+      get(:show, :params => {:id => 'ecookbook'})
+      assert_response :success
+      assert_select 'table.issue-report td.name', :text => 'Support request', :count => 1
+    end
+
+    with_settings :display_subprojects_issues => '0' do
+      get(:show, :params => {:id => 'ecookbook'})
+      assert_response :success
+      assert_select 'table.issue-report td.name', :text => 'Support request', :count => 0
+    end
+  end
+
   def test_show_should_spent_and_estimated_time
     @request.session[:user_id] = 1
     get(:show, :params => {:id => 'ecookbook'})
@@ -1028,6 +1047,16 @@ class ProjectsControllerTest < Redmine::ControllerTest
     assert_select '.warning', :text => /Are you sure you want to delete this project/
   end
 
+  def test_destroy_leaf_project_with_wrong_confirmation_should_show_confirmation
+    @request.session[:user_id] = 1 # admin
+
+    assert_no_difference 'Project.count' do
+      delete(:destroy, :params => {:id => 2, :confirm => 'wrong'})
+      assert_response :success
+    end
+    assert_select '.warning', :text => /Are you sure you want to delete this project/
+  end
+
   def test_destroy_without_confirmation_should_show_confirmation_with_subprojects
     set_tmp_attachments_directory
     @request.session[:user_id] = 1 # admin
@@ -1051,12 +1080,46 @@ class ProjectsControllerTest < Redmine::ControllerTest
         :destroy,
         :params => {
           :id => 1,
-          :confirm => 1
+          :confirm => 'ecookbook'
         }
       )
       assert_redirected_to '/admin/projects'
     end
     assert_nil Project.find_by_id(1)
+  end
+
+  def test_destroy_with_normal_user_should_destroy
+    set_tmp_attachments_directory
+    @request.session[:user_id] = 2 # non-admin
+
+    assert_difference 'Project.count', -1 do
+      delete(
+        :destroy,
+        :params => {
+          :id => 2,
+          :confirm => 'onlinestore'
+        }
+      )
+      assert_redirected_to '/projects'
+    end
+    assert_nil Project.find_by_id(2)
+  end
+
+  def test_destroy_with_normal_user_should_not_destroy_with_subprojects
+    set_tmp_attachments_directory
+    @request.session[:user_id] = 2 # non-admin
+
+    assert_difference 'Project.count', 0 do
+      delete(
+        :destroy,
+        :params => {
+          :id => 1,
+          :confirm => 'ecookbook'
+        }
+      )
+      assert_response 403
+    end
+    assert Project.find(1)
   end
 
   def test_archive

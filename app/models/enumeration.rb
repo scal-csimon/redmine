@@ -24,7 +24,7 @@ class Enumeration < ActiveRecord::Base
 
   belongs_to :project
 
-  acts_as_positioned :scope => :parent_id
+  acts_as_positioned :scope => [:project_id, :parent_id]
   acts_as_customizable
   acts_as_tree
 
@@ -35,10 +35,10 @@ class Enumeration < ActiveRecord::Base
   validates_uniqueness_of :name, :scope => [:type, :project_id]
   validates_length_of :name, :maximum => 30
 
-  scope :shared, lambda { where(:project_id => nil) }
-  scope :sorted, lambda { order(:position) }
-  scope :active, lambda { where(:active => true) }
-  scope :system, lambda { where(:project_id => nil) }
+  scope :shared, lambda {where(:project_id => nil)}
+  scope :sorted, lambda {order(:position)}
+  scope :active, lambda {where(:active => true)}
+  scope :system, lambda {where(:project_id => nil)}
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
 
   def self.default
@@ -149,7 +149,7 @@ class Enumeration < ActiveRecord::Base
   # position as the overridden enumeration
   def update_position
     super
-    if saved_change_to_position?
+    if saved_change_to_position? && self.parent_id.nil?
       self.class.where.not(:parent_id => nil).update_all(
         "position = coalesce((
           select position

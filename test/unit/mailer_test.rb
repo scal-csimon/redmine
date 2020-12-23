@@ -30,7 +30,8 @@ class MailerTest < ActiveSupport::TestCase
            :issue_statuses, :enumerations, :messages, :boards, :repositories,
            :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions,
            :versions,
-           :comments
+           :comments,
+           :groups_users, :watchers
 
   def setup
     ActionMailer::Base.deliveries.clear
@@ -480,6 +481,16 @@ class MailerTest < ActiveSupport::TestCase
     end
   end
 
+  def test_issue_add_should_include_issue_status_type_badge
+    issue = Issue.find(1)
+    Mailer.deliver_issue_add(issue)
+
+    mail = last_email
+    assert_select_email do
+      assert_select 'span.badge.badge-status-open', text: 'open'
+    end
+  end
+
   def test_issue_edit_subject_should_include_status_changes_if_setting_is_enabled
     with_settings :show_status_changes_in_mail_subject => 1 do
       issue = Issue.find(2)
@@ -592,8 +603,26 @@ class MailerTest < ActiveSupport::TestCase
     end
   end
 
+  def test_locked_user_in_group_watcher_should_not_be_notified
+    locked_user = users(:users_005)
+    group = Group.generate!
+    group.users << locked_user
+    issue = Issue.generate!
+    Watcher.create!(:watchable => issue, :user => group)
+
+    ActionMailer::Base.deliveries.clear
+    assert Mailer.deliver_issue_add(issue)
+    assert_not_include locked_user.mail, recipients
+
+    journal = issue.init_journal(User.current)
+    issue.update(:status_id => 4)
+    ActionMailer::Base.deliveries.clear
+    Mailer.deliver_issue_edit(journal)
+    assert_not_include locked_user.mail, recipients
+  end
+
   def test_version_file_added
-    attachements = [ Attachment.find_by_container_type('Version') ]
+    attachements = [Attachment.find_by_container_type('Version')]
     assert Mailer.deliver_attachments_added(attachements)
     assert_not_nil last_email.bcc
     assert last_email.bcc.any?
@@ -603,7 +632,7 @@ class MailerTest < ActiveSupport::TestCase
   end
 
   def test_project_file_added
-    attachements = [ Attachment.find_by_container_type('Project') ]
+    attachements = [Attachment.find_by_container_type('Project')]
     assert Mailer.deliver_attachments_added(attachements)
     assert_not_nil last_email.bcc
     assert last_email.bcc.any?
@@ -683,9 +712,14 @@ class MailerTest < ActiveSupport::TestCase
     assert mail.bcc.include?('dlopper@somenet.foo')
     assert_mail_body_match 'Bug #3: Error 281 when updating a recipe (5 days late)', mail
     assert_mail_body_match 'View all issues (2 open)', mail
+    url =
+      "http://localhost:3000/issues?f%5B%5D=status_id&f%5B%5D=assigned_to_id" \
+        "&f%5B%5D=due_date&op%5Bassigned_to_id%5D=%3D&op%5Bdue_date%5D=%3Ct%2B&op%5B" \
+        "status_id%5D=o&set_filter=1&sort=due_date%3Aasc&v%5B" \
+        "assigned_to_id%5D%5B%5D=me&v%5Bdue_date%5D%5B%5D=#{days}"
     assert_select_email do
       assert_select 'a[href=?]',
-                    "http://localhost:3000/issues?f%5B%5D=status_id&f%5B%5D=assigned_to_id&f%5B%5D=due_date&op%5Bassigned_to_id%5D=%3D&op%5Bdue_date%5D=%3Ct%2B&op%5Bstatus_id%5D=o&set_filter=1&sort=due_date%3Aasc&v%5Bassigned_to_id%5D%5B%5D=me&v%5Bdue_date%5D%5B%5D=#{days}",
+                    url,
                     :text => '1'
       assert_select 'a[href=?]',
                     'http://localhost:3000/issues?assigned_to_id=me&set_filter=1&sort=due_date%3Aasc',
@@ -704,7 +738,10 @@ class MailerTest < ActiveSupport::TestCase
       assert_equal 1, ActionMailer::Base.deliveries.size
       mail = last_email
       assert mail.bcc.include?('dlopper@somenet.foo')
-      assert_mail_body_match 'Bug #3: Error 281 when updating a recipe (En retard de 5 jours)', mail
+      assert_mail_body_match(
+        'Bug #3: Error 281 when updating a recipe (En retard de 5 jours)',
+        mail
+      )
       assert_equal "1 demande(s) arrivent à échéance (42)", mail.subject
     end
   end
@@ -759,9 +796,15 @@ class MailerTest < ActiveSupport::TestCase
       assert_equal 2, ActionMailer::Base.deliveries.size
       assert_equal %w(dlopper@somenet.foo jsmith@somenet.foo), recipients
       ActionMailer::Base.deliveries.each do |mail|
-        assert_mail_body_match '1 issue(s) that are assigned to you are due in the next 7 days::', mail
+        assert_mail_body_match(
+          '1 issue(s) that are assigned to you are due in the next 7 days::',
+          mail
+        )
         assert_mail_body_match 'Assigned to group (Due in 5 days)', mail
-        assert_mail_body_match "View all issues (#{mail.bcc.include?('dlopper@somenet.foo') ? 3 : 2} open)", mail
+        assert_mail_body_match(
+          "View all issues (#{mail.bcc.include?('dlopper@somenet.foo') ? 3 : 2} open)",
+          mail
+        )
       end
     end
   end
@@ -770,7 +813,8 @@ class MailerTest < ActiveSupport::TestCase
     with_settings :default_language => 'en' do
       version = Version.generate!(:name => 'Acme', :project_id => 1)
       Issue.generate!(:assigned_to => User.find(2), :due_date => 5.days.from_now)
-      Issue.generate!(:assigned_to => User.find(3), :due_date => 5.days.from_now, :fixed_version => version)
+      Issue.generate!(:assigned_to => User.find(3), :due_date => 5.days.from_now,
+                      :fixed_version => version)
       ActionMailer::Base.deliveries.clear
 
       Mailer.reminders(:days => 42, :version => 'acme')
@@ -825,7 +869,13 @@ class MailerTest < ActiveSupport::TestCase
     with_settings :emails_footer => "footer without link" do
       sender = User.find(2)
       sender.remote_ip = '192.168.1.1'
-      assert Mailer.deliver_security_notification(User.find(1), sender, message: :notice_account_password_updated)
+      assert(
+        Mailer.deliver_security_notification(
+          User.find(1),
+          sender,
+          :message => :notice_account_password_updated
+        )
+      )
       mail = last_email
       assert_mail_body_match sender.login, mail
       assert_mail_body_match '192.168.1.1', mail
@@ -842,7 +892,14 @@ class MailerTest < ActiveSupport::TestCase
     with_settings :emails_footer => "footer without link" do
       sender = User.find(2)
       sender.remote_ip = '192.168.1.1'
-      assert Mailer.deliver_security_notification(User.find(1), sender, message: :notice_account_password_updated, remote_ip: '10.0.0.42')
+      assert(
+        Mailer.deliver_security_notification(
+          User.find(1),
+          sender,
+          :message => :notice_account_password_updated,
+          :remote_ip => '10.0.0.42'
+        )
+      )
       mail = last_email
       assert_mail_body_match '10.0.0.42', mail
     end
@@ -851,11 +908,13 @@ class MailerTest < ActiveSupport::TestCase
   def test_security_notification_should_include_title
     set_language_if_valid User.find(2).language
     with_settings :emails_footer => "footer without link" do
-      assert Mailer.deliver_security_notification(
-               User.find(2), User.find(2),
-               message: :notice_account_password_updated,
-               title: :label_my_account
-             )
+      assert(
+        Mailer.deliver_security_notification(
+          User.find(2), User.find(2),
+          :message => :notice_account_password_updated,
+          :title => :label_my_account
+        )
+      )
       assert_select_email do
         assert_select "a", false
         assert_select "h1", :text => I18n.t(:label_my_account)
@@ -866,12 +925,14 @@ class MailerTest < ActiveSupport::TestCase
   def test_security_notification_should_include_link
     set_language_if_valid User.find(3).language
     with_settings :emails_footer => "footer without link" do
-      assert Mailer.deliver_security_notification(
-               User.find(3), User.find(3),
-               message: :notice_account_password_updated,
-               title: :label_my_account,
-               url: {controller: 'my', action: 'account'}
-             )
+      assert(
+        Mailer.deliver_security_notification(
+          User.find(3), User.find(3),
+          :message => :notice_account_password_updated,
+          :title => :label_my_account,
+          :url => {:controller => 'my', :action => 'account'}
+        )
+      )
       assert_select_email do
         assert_select "h1", false
         assert_select 'a[href=?]', 'http://localhost:3000/my/account', :text => I18n.t(:label_my_account)
@@ -1024,7 +1085,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_equal ["admin@somenet.foo"],
                  Mailer.email_addresses(User.find(1))
     assert_equal ["admin@somenet.foo", "jsmith@somenet.foo"],
-                 Mailer.email_addresses(User.where(:id => [1,2])).sort
+                 Mailer.email_addresses(User.where(:id => [1, 2])).sort
   end
 
   def test_email_addresses_should_include_notified_emails_addresses_only

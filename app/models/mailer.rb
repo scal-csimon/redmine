@@ -58,9 +58,11 @@ class Mailer < ActionMailer::Base
     options = {:protocol => Setting.protocol}
     if Setting.host_name.to_s =~ /\A(https?\:\/\/)?(.+?)(\:(\d+))?(\/.+)?\z/i
       host, port, prefix = $2, $4, $5
-      options.merge!({
-        :host => host, :port => port, :script_name => prefix
-      })
+      options.merge!(
+        {
+          :host => host, :port => port, :script_name => prefix
+        }
+      )
     else
       options[:host] = Setting.host_name
     end
@@ -292,8 +294,11 @@ class Mailer < ActionMailer::Base
     @wiki_content_url = url_for(:controller => 'wiki', :action => 'show',
                                       :project_id => wiki_content.project,
                                       :id => wiki_content.page.title)
-    mail :to => user,
-      :subject => "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_added, :id => wiki_content.page.pretty_title)}"
+    mail(
+      :to => user,
+      :subject =>
+        "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_added, :id => wiki_content.page.pretty_title)}"
+    )
   end
 
   # Notifies users about a new wiki content (wiki page added).
@@ -315,14 +320,19 @@ class Mailer < ActionMailer::Base
     message_id wiki_content
     @wiki_content = wiki_content
     @user = user
-    @wiki_content_url = url_for(:controller => 'wiki', :action => 'show',
-                                      :project_id => wiki_content.project,
-                                      :id => wiki_content.page.title)
-    @wiki_diff_url = url_for(:controller => 'wiki', :action => 'diff',
-                                   :project_id => wiki_content.project, :id => wiki_content.page.title,
-                                   :version => wiki_content.version)
-    mail :to => user,
-      :subject => "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_updated, :id => wiki_content.page.pretty_title)}"
+    @wiki_content_url =
+      url_for(:controller => 'wiki', :action => 'show',
+              :project_id => wiki_content.project,
+              :id => wiki_content.page.title)
+    @wiki_diff_url =
+      url_for(:controller => 'wiki', :action => 'diff',
+              :project_id => wiki_content.project, :id => wiki_content.page.title,
+              :version => wiki_content.version)
+    mail(
+      :to => user,
+      :subject =>
+        "[#{wiki_content.project.name}] #{l(:mail_subject_wiki_content_updated, :id => wiki_content.page.pretty_title)}"
+    )
   end
 
   # Notifies users about the update of the specified wiki content
@@ -405,8 +415,8 @@ class Mailer < ActionMailer::Base
   # The email will be sent to the email address specifiedby recipient if provided.
   #
   # Exemple:
-  #   Mailer.deliver_account_activated(user, token)
-  #   Mailer.deliver_account_activated(user, token, 'foo@example.net')
+  #   Mailer.deliver_lost_password(user, token)
+  #   Mailer.deliver_lost_password(user, token, 'foo@example.net')
   def self.deliver_lost_password(user, token, recipient=nil)
     lost_password(user, token, recipient).deliver_later
   end
@@ -587,10 +597,12 @@ class Mailer < ActionMailer::Base
 
     user_ids = options[:users]
 
-    scope = Issue.open.where("#{Issue.table_name}.assigned_to_id IS NOT NULL" +
-      " AND #{Project.table_name}.status = #{Project::STATUS_ACTIVE}" +
-      " AND #{Issue.table_name}.due_date <= ?", days.day.from_now.to_date
-    )
+    scope =
+      Issue.open.where(
+        "#{Issue.table_name}.assigned_to_id IS NOT NULL" \
+          " AND #{Project.table_name}.status = #{Project::STATUS_ACTIVE}" \
+          " AND #{Issue.table_name}.due_date <= ?", days.day.from_now.to_date
+      )
     scope = scope.where(:assigned_to_id => user_ids) if user_ids.present?
     scope = scope.where(:project_id => project.id) if project
     scope = scope.where(:fixed_version_id => target_version_id) if target_version_id.present?

@@ -137,7 +137,7 @@ class Repository::Git < Repository
 
     h1 = extra_info || {}
     h  = h1.dup
-    repo_heads = scm_brs.map{ |br| br.scmid }
+    repo_heads = scm_brs.map{|br| br.scmid}
     h["heads"] ||= []
     prev_db_heads = h["heads"].dup
     if prev_db_heads.empty?
@@ -220,17 +220,18 @@ class Repository::Git < Repository
 
   def save_revision(rev)
     parents = (rev.parents || []).collect{|rp| find_changeset_by_name(rp)}.compact
-    changeset = Changeset.create(
-              :repository   => self,
-              :revision     => rev.identifier,
-              :scmid        => rev.scmid,
-              :committer    => rev.author,
-              :committed_on => rev.time,
-              :comments     => rev.message,
-              :parents      => parents
-              )
+    changeset =
+      Changeset.create(
+        :repository   => self,
+        :revision     => rev.identifier,
+        :scmid        => rev.scmid,
+        :committer    => rev.author,
+        :committed_on => rev.time,
+        :comments     => rev.message,
+        :parents      => parents
+      )
     unless changeset.new_record?
-      rev.paths.each { |change| changeset.create_change(change) }
+      rev.paths.each {|change| changeset.create_change(change)}
     end
     changeset
   end

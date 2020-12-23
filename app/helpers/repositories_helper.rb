@@ -68,7 +68,7 @@ module RepositoriesHelper
       end
     end.compact
 
-    tree = { }
+    tree = {}
     changes.each do |change|
       p = tree
       dirs = change.path.to_s.split('/').select {|d| !d.blank?}
@@ -87,6 +87,7 @@ module RepositoriesHelper
 
   def render_changes_tree(tree)
     return '' if tree.nil?
+
     output = +''
     output << '<ul>'
     tree.keys.sort.each do |file|
@@ -155,18 +156,19 @@ module RepositoriesHelper
   end
 
   def subversion_field_tags(form, repository)
-      content_tag('p', form.text_field(:url, :size => 60, :required => true,
-                       :disabled => !repository.safe_attribute?('url')) +
-                       scm_path_info_tag(repository)) +
-      content_tag('p', form.text_field(:login, :size => 30)) +
-      content_tag(
-        'p',
-        form.password_field(
-          :password, :size => 30, :name => 'ignore',
-          :value => ((repository.new_record? || repository.password.blank?) ? '' : ('x'*15)),
-          :onfocus => "this.value=''; this.name='repository[password]';",
-          :onchange => "this.name='repository[password]';")
-      )
+    content_tag('p',
+                form.text_field(:url, :size => 60, :required => true,
+                :disabled => !repository.safe_attribute?('url')) +
+                scm_path_info_tag(repository)) +
+    content_tag('p', form.text_field(:login, :size => 30)) +
+    content_tag(
+      'p',
+      form.password_field(
+        :password, :size => 30, :name => 'ignore',
+        :value => ((repository.new_record? || repository.password.blank?) ? '' : ('x' * 15)),
+        :onfocus => "this.value=''; this.name='repository[password]';",
+        :onchange => "this.name='repository[password]';")
+    )
   end
 
   def mercurial_field_tags(form, repository)
@@ -279,6 +281,7 @@ module RepositoriesHelper
 
   def index_commits(commits, heads)
     return nil if commits.nil? or commits.first.parents.nil?
+
     refs_map = {}
     heads.each do |head|
       refs_map[head.scmid] ||= []
@@ -287,7 +290,7 @@ module RepositoriesHelper
     commits_by_scmid = {}
     commits.reverse.each_with_index do |commit, commit_index|
       commits_by_scmid[commit.scmid] = {
-        :parent_scmids => commit.parents.collect { |parent| parent.scmid },
+        :parent_scmids => commit.parents.collect {|parent| parent.scmid},
         :rdmid => commit_index,
         :refs  => refs_map.include?(commit.scmid) ? refs_map[commit.scmid].join(" ") : nil,
         :scmid => commit.scmid,

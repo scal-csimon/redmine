@@ -32,22 +32,48 @@ class Attachment < ActiveRecord::Base
   validates_length_of :description, :maximum => 255
   validate :validate_max_file_size, :validate_file_extension
 
-  acts_as_event :title => :filename,
-                :url => Proc.new {|o| {:controller => 'attachments', :action => 'show', :id => o.id, :filename => o.filename}}
-
-  acts_as_activity_provider :type => 'files',
-                            :permission => :view_files,
-                            :author_key => :author_id,
-                            :scope => select("#{Attachment.table_name}.*").
-                                      joins("LEFT JOIN #{Version.table_name} ON #{Attachment.table_name}.container_type='Version' AND #{Version.table_name}.id = #{Attachment.table_name}.container_id " +
-                                            "LEFT JOIN #{Project.table_name} ON #{Version.table_name}.project_id = #{Project.table_name}.id OR ( #{Attachment.table_name}.container_type='Project' AND #{Attachment.table_name}.container_id = #{Project.table_name}.id )")
-
-  acts_as_activity_provider :type => 'documents',
-                            :permission => :view_documents,
-                            :author_key => :author_id,
-                            :scope => select("#{Attachment.table_name}.*").
-                                      joins("LEFT JOIN #{Document.table_name} ON #{Attachment.table_name}.container_type='Document' AND #{Document.table_name}.id = #{Attachment.table_name}.container_id " +
-                                            "LEFT JOIN #{Project.table_name} ON #{Document.table_name}.project_id = #{Project.table_name}.id")
+  acts_as_event(
+    :title => :filename,
+    :url =>
+      Proc.new do |o|
+        {:controller => 'attachments', :action => 'show',
+         :id => o.id, :filename => o.filename}
+      end
+  )
+  acts_as_activity_provider(
+    :type => 'files',
+    :permission => :view_files,
+    :author_key => :author_id,
+    :scope =>
+      proc do
+        select("#{Attachment.table_name}.*").
+          joins(
+            "LEFT JOIN #{Version.table_name} " \
+              "ON #{Attachment.table_name}.container_type='Version' " \
+              "AND #{Version.table_name}.id = #{Attachment.table_name}.container_id " \
+              "LEFT JOIN #{Project.table_name} " \
+              "ON #{Version.table_name}.project_id = #{Project.table_name}.id " \
+              "OR ( #{Attachment.table_name}.container_type='Project' " \
+              "AND #{Attachment.table_name}.container_id = #{Project.table_name}.id )"
+          )
+      end
+  )
+  acts_as_activity_provider(
+    :type => 'documents',
+    :permission => :view_documents,
+    :author_key => :author_id,
+    :scope =>
+      proc do
+        select("#{Attachment.table_name}.*").
+          joins(
+            "LEFT JOIN #{Document.table_name} " \
+            "ON #{Attachment.table_name}.container_type='Document' " \
+            "AND #{Document.table_name}.id = #{Attachment.table_name}.container_id " \
+            "LEFT JOIN #{Project.table_name} " \
+            "ON #{Document.table_name}.project_id = #{Project.table_name}.id"
+          )
+      end
+  )
 
   cattr_accessor :storage_path
   @@storage_path = Redmine::Configuration['attachments_storage_path'] || File.join(Rails.root, "files")
@@ -226,8 +252,13 @@ class Attachment < ActiveRecord::Base
       begin
         Redmine::Thumbnail.generate(self.diskfile, target, size, is_pdf?)
       rescue => e
-        logger.error "An error occured while generating thumbnail for #{disk_filename} to #{target}\nException was: #{e.message}" if logger
-        return nil
+        if logger
+          logger.error(
+            "An error occured while generating thumbnail for #{disk_filename} " \
+              "to #{target}\nException was: #{e.message}"
+          )
+        end
+        nil
       end
     end
   end
@@ -437,6 +468,7 @@ class Attachment < ActiveRecord::Base
     if allowed.present? && !extension_in?(extension, allowed)
       return false
     end
+
     true
   end
 
@@ -466,11 +498,12 @@ class Attachment < ActiveRecord::Base
   def reuse_existing_file_if_possible
     original_diskfile = nil
     reused = with_lock do
-      if existing = Attachment
-                      .where(digest: self.digest, filesize: self.filesize)
-                      .where('id <> ? and disk_filename <> ?',
-                             self.id, self.disk_filename)
-                      .first
+      if existing = Attachment.
+                      where(digest: self.digest, filesize: self.filesize).
+                      where('id <> ? and disk_filename <> ?',
+                            self.id, self.disk_filename).
+                      order(:id).
+                      last
         existing.with_lock do
           original_diskfile = self.diskfile
           existing_diskfile = existing.diskfile

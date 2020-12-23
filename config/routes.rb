@@ -22,6 +22,9 @@ Rails.application.routes.draw do
 
   match 'login', :to => 'account#login', :as => 'signin', :via => [:get, :post]
   match 'logout', :to => 'account#logout', :as => 'signout', :via => [:get, :post]
+  match 'account/twofa/confirm', :to => 'account#twofa_confirm', :via => :get
+  match 'account/twofa/resend', :to => 'account#twofa_resend', :via => :post
+  match 'account/twofa', :to => 'account#twofa', :via => [:get, :post]
   match 'account/register', :to => 'account#register', :via => [:get, :post], :as => 'register'
   match 'account/lost_password', :to => 'account#lost_password', :via => [:get, :post], :as => 'lost_password'
   match 'account/activate', :to => 'account#activate', :via => :get
@@ -64,9 +67,12 @@ Rails.application.routes.draw do
   get 'projects/:id/issues/report', :to => 'reports#issue_report', :as => 'project_issues_report'
   get 'projects/:id/issues/report/:detail', :to => 'reports#issue_report_details', :as => 'project_issues_report_details'
 
-  get   '/issues/imports/new', :to => 'imports#new', :defaults => { :type => 'IssueImport' }, :as => 'new_issues_import'
-  get   '/time_entries/imports/new', :to => 'imports#new', :defaults => { :type => 'TimeEntryImport' }, :as => 'new_time_entries_import'
-  get   '/users/imports/new', :to => 'imports#new', :defaults => { :type => 'UserImport' }, :as => 'new_users_import'
+  get   '/issues/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'IssueImport'}, :as => 'new_issues_import'
+  get   '/time_entries/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'TimeEntryImport'}, :as => 'new_time_entries_import'
+  get   '/users/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'UserImport'}, :as => 'new_users_import'
   post  '/imports', :to => 'imports#create', :as => 'imports'
   get   '/imports/:id', :to => 'imports#show', :as => 'import'
   match '/imports/:id/settings', :to => 'imports#settings', :via => [:get, :post], :as => 'import_settings'
@@ -85,6 +91,19 @@ Rails.application.routes.draw do
   match 'my/add_block', :controller => 'my', :action => 'add_block', :via => :post
   match 'my/remove_block', :controller => 'my', :action => 'remove_block', :via => :post
   match 'my/order_blocks', :controller => 'my', :action => 'order_blocks', :via => :post
+  match 'my/twofa/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/confirm', :controller => 'twofa', :action => 'activate_confirm', :via => :get
+  match 'my/twofa/:scheme/activate', :controller => 'twofa', :action => 'activate', :via => [:get, :post]
+  match 'my/twofa/:scheme/deactivate/init', :controller => 'twofa', :action => 'deactivate_init', :via => :post
+  match 'my/twofa/:scheme/deactivate/confirm', :controller => 'twofa', :action => 'deactivate_confirm', :via => :get
+  match 'my/twofa/:scheme/deactivate', :controller => 'twofa', :action => 'deactivate', :via => [:get, :post]
+  match 'my/twofa/select_scheme', :controller => 'twofa', :action => 'select_scheme', :via => :get
+  match 'my/twofa/backup_codes/init', :controller => 'twofa_backup_codes', :action => 'init', :via => :post
+  match 'my/twofa/backup_codes/confirm', :controller => 'twofa_backup_codes', :action => 'confirm', :via => :get
+  match 'my/twofa/backup_codes/create', :controller => 'twofa_backup_codes', :action => 'create', :via => [:get, :post]
+  match 'my/twofa/backup_codes', :controller => 'twofa_backup_codes', :action => 'show', :via => [:get]
+  match 'users/:user_id/twofa/deactivate', :controller => 'twofa', :action => 'admin_deactivate', :via => :post
 
   resources :users do
     resources :memberships, :controller => 'principal_memberships'

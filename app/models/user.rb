@@ -20,6 +20,7 @@
 require "digest/sha1"
 
 class User < Principal
+  include Redmine::Ciphering
   include Redmine::SafeAttributes
 
   # Different ways of displaying/sorting users
@@ -131,27 +132,27 @@ class User < Principal
   after_save :update_notified_project_ids, :destroy_tokens, :deliver_security_notification
   after_destroy :deliver_security_notification
 
-  scope :admin, lambda {|*args|
+  scope :admin, (lambda do |*args|
     admin = args.size > 0 ? !!args.first : true
     where(:admin => admin)
-  }
-  scope :in_group, lambda {|group|
+  end)
+  scope :in_group, (lambda do |group|
     group_id = group.is_a?(Group) ? group.id : group.to_i
     where("#{User.table_name}.id IN (SELECT gu.user_id FROM #{table_name_prefix}groups_users#{table_name_suffix} gu WHERE gu.group_id = ?)", group_id)
-  }
-  scope :not_in_group, lambda {|group|
+  end)
+  scope :not_in_group, (lambda do |group|
     group_id = group.is_a?(Group) ? group.id : group.to_i
     where("#{User.table_name}.id NOT IN (SELECT gu.user_id FROM #{table_name_prefix}groups_users#{table_name_suffix} gu WHERE gu.group_id = ?)", group_id)
-  }
-  scope :sorted, lambda { order(*User.fields_for_order_statement)}
-  scope :having_mail, lambda {|arg|
+  end)
+  scope :sorted, lambda {order(*User.fields_for_order_statement)}
+  scope :having_mail, (lambda do |arg|
     addresses = Array.wrap(arg).map {|a| a.to_s.downcase}
     if addresses.any?
       joins(:email_addresses).where("LOWER(#{EmailAddress.table_name}.address) IN (?)", addresses).distinct
     else
       none
     end
-  }
+  end)
 
   def set_mail_notification
     self.mail_notification = Setting.default_notification_option if self.mail_notification.blank?
@@ -220,7 +221,17 @@ class User < Principal
   end
 
   # Returns the user that matches provided login and password, or nil
+  # AuthSource errors are caught, logged and nil is returned.
   def self.try_to_login(login, password, active_only=true)
+    try_to_login!(login, password, active_only)
+  rescue AuthSourceException => e
+    logger.error "An error occured when authenticating #{login}: #{e.message}"
+    nil
+  end
+
+  # Returns the user that matches provided login and password, or nil
+  # AuthSource errors are passed through.
+  def self.try_to_login!(login, password, active_only=true)
     login = login.to_s.strip
     password = password.to_s
 
@@ -391,6 +402,14 @@ class User < Principal
     self
   end
 
+  def twofa_active?
+    twofa_scheme.present?
+  end
+
+  def must_activate_twofa?
+    Setting.twofa == '2' && !twofa_active?
+  end
+
   def pref
     self.preference ||= UserPreference.new(:user => self)
   end
@@ -449,6 +468,14 @@ class User < Principal
 
   def delete_autologin_token(value)
     Token.where(:user_id => id, :action => 'autologin', :value => value).delete_all
+  end
+
+  def twofa_totp_key
+    read_ciphered_attribute(:twofa_totp_key)
+  end
+
+  def twofa_totp_key=(key)
+    write_ciphered_attribute(:twofa_totp_key, key)
   end
 
   # Returns true if token is a valid session token for the user whose id is user_id
@@ -583,9 +610,10 @@ class User < Principal
   def membership(project)
     project_id = project.is_a?(Project) ? project.id : project
 
-    @membership_by_project_id ||= Hash.new {|h, project_id|
-      h[project_id] = memberships.where(:project_id => project_id).first
-    }
+    @membership_by_project_id ||=
+      Hash.new do |h, project_id|
+        h[project_id] = memberships.where(:project_id => project_id).first
+      end
     @membership_by_project_id[project_id]
   end
 
@@ -710,11 +738,11 @@ class User < Principal
       roles = roles_for_project(context)
       return false unless roles
 
-      roles.any? {|role|
+      roles.any? do |role|
         (context.is_public? || role.member?) &&
         role.allowed_to?(action) &&
         (block_given? ? yield(role, self) : true)
-      }
+      end
     elsif context && context.is_a?(Array)
       if context.empty?
         false
@@ -730,10 +758,10 @@ class User < Principal
 
       # authorize if user has at least one role that has this permission
       roles = self.roles.to_a | [builtin_role]
-      roles.any? {|role|
+      roles.any? do |role|
         role.allowed_to?(action) &&
         (block_given? ? yield(role, self) : true)
-      }
+      end
     else
       false
     end
@@ -949,16 +977,13 @@ class User < Principal
     if (admin? && saved_change_to_id? && active?) ||    # newly created admin
        (admin? && saved_change_to_admin? && active?) || # regular user became admin
        (admin? && saved_change_to_status? && active?)   # locked admin became active again
-
-       deliver = true
-       options[:message] = :mail_body_security_notification_add
-
+      deliver = true
+      options[:message] = :mail_body_security_notification_add
     elsif (admin? && destroyed? && active?) ||      # active admin user was deleted
           (!admin? && saved_change_to_admin? && active?) || # admin is no longer admin
           (admin? && saved_change_to_status? && !active?)   # admin was locked
-
-          deliver = true
-          options[:message] = :mail_body_security_notification_remove
+      deliver = true
+      options[:message] = :mail_body_security_notification_remove
     end
 
     if deliver

@@ -85,11 +85,19 @@ class Setting < ActiveRecord::Base
   cattr_accessor :available_settings
   self.available_settings ||= {}
 
-  validates_uniqueness_of :name, :if => Proc.new {|setting| setting.new_record? || setting.name_changed?}
+  validates_uniqueness_of(
+    :name,
+    :if => Proc.new do |setting|
+      setting.new_record? || setting.name_changed?
+    end
+  )
   validates_inclusion_of :name, :in => Proc.new {available_settings.keys}
-  validates_numericality_of :value, :only_integer => true, :if => Proc.new { |setting|
-    (s = available_settings[setting.name]) && s['format'] == 'int'
-  }
+  validates_numericality_of(
+    :value, :only_integer => true,
+    :if => Proc.new do |setting|
+      (s = available_settings[setting.name]) && s['format'] == 'int'
+    end
+  )
 
   # Hash used to cache setting values
   @cached_settings = {}
@@ -178,7 +186,7 @@ class Setting < ActiveRecord::Base
     if settings.key?(:mail_from)
       begin
         mail_from = Mail::Address.new(settings[:mail_from])
-        raise unless mail_from.address =~ EmailAddress::EMAIL_REGEXP
+        raise unless EmailAddress::EMAIL_REGEXP.match?(mail_from.address)
       rescue
         messages << [:mail_from, l('activerecord.errors.messages.invalid')]
       end
@@ -189,7 +197,7 @@ class Setting < ActiveRecord::Base
   # Sets a setting value from params
   def self.set_from_params(name, params)
     params = params.dup
-    params.delete_if {|v| v.blank? } if params.is_a?(Array)
+    params.delete_if {|v| v.blank?} if params.is_a?(Array)
     params.symbolize_keys! if params.is_a?(Hash)
 
     m = "#{name}_from_params"
@@ -213,14 +221,20 @@ class Setting < ActiveRecord::Base
       params[:keywords].each_with_index do |keywords, i|
         next if keywords.blank?
 
-        s << attributes.inject({}) {|h, a|
+        s << attributes.inject({}) do |h, a|
           value = params[a][i].to_s
           h[a.to_s] = value if value.present?
           h
-        }.merge('keywords' => keywords)
+        end.merge('keywords' => keywords)
       end
     end
     s
+  end
+
+  def self.twofa_from_params(params)
+    # unpair all current 2FA pairings when switching off 2FA
+    Redmine::Twofa.unpair_all! if params == '0' && self.twofa?
+    params
   end
 
   # Helper that returns an array based on per_page_options setting
@@ -322,7 +336,7 @@ class Setting < ActiveRecord::Base
       end
     elsif arg.is_a?(Hash)
       arg = arg.dup
-      arg.each do |k,v|
+      arg.each do |k, v|
         arg[k] = force_utf8_strings(v)
       end
       arg

@@ -64,9 +64,11 @@ class GitAdapterTest < ActiveSupport::TestCase
     end
 
     def test_scm_version
-      to_test = { "git version 1.7.3.4\n"             => [1,7,3,4],
-                  "1.6.1\n1.7\n1.8"                   => [1,6,1],
-                  "1.6.2\r\n1.8.1\r\n1.9.1"           => [1,6,2]}
+      to_test = {
+        "git version 1.7.3.4\n"   => [1, 7, 3, 4],
+        "1.6.1\n1.7\n1.8"         => [1, 6, 1],
+        "1.6.2\r\n1.8.1\r\n1.9.1" => [1, 6, 2]
+      }
       to_test.each do |s, v|
         test_scm_version_for(s, v)
       end
@@ -125,16 +127,19 @@ class GitAdapterTest < ActiveSupport::TestCase
     end
 
     def test_tags
-      assert_equal [
-            "tag00.lightweight",
-            "tag01.annotated",
-            "tag02.lightweight.#{@char_1}.01",
-          ], @adapter.tags
+      assert_equal(
+        [
+          "tag00.lightweight",
+          "tag01.annotated",
+          "tag02.lightweight.#{@char_1}.01",
+        ],
+        @adapter.tags
+      )
     end
 
     def test_revisions_master_all
       revs1 = []
-      @adapter.revisions('', nil, "master",{}) do |rev|
+      @adapter.revisions('', nil, "master", {}) do |rev|
         revs1 << rev
       end
       assert_equal 15, revs1.length
@@ -186,7 +191,7 @@ class GitAdapterTest < ActiveSupport::TestCase
 
     def test_revisions_branch_latin_1_path_encoding_all
       revs1 = []
-      @adapter.revisions('', nil, "latin-1-path-encoding",{}) do |rev|
+      @adapter.revisions('', nil, "latin-1-path-encoding", {}) do |rev|
         revs1 << rev
       end
       assert_equal 8, revs1.length
@@ -235,13 +240,13 @@ class GitAdapterTest < ActiveSupport::TestCase
       else
         revs1 = []
         @adapter.revisions(
-                         '',
-                         "latin-1-branch-#{@char_1}-01",
-                         "latin-1-branch-#{@char_1}-02",
-                         {:reverse => true}) do |rev|
+          '',
+          "latin-1-branch-#{@char_1}-01",
+          "latin-1-branch-#{@char_1}-02",
+          {:reverse => true}
+        ) do |rev|
           revs1 << rev
         end
-
         assert_equal 2, revs1.length
         assert_equal '64f1f3e89ad1cb57976ff0ad99a107012ba3481d', revs1[0].identifier
         assert_equal '1ca7f5ed374f3cb31a93ae5215c2e25cc6ec5127', revs1[1].identifier
@@ -253,10 +258,11 @@ class GitAdapterTest < ActiveSupport::TestCase
       assert_raise Redmine::Scm::Adapters::CommandFailed do
         revs1 = []
         @adapter.revisions(
-                         '',
-                         '1234abcd',
-                         "master",
-                         {:reverse => true}) do |rev|
+          '',
+          '1234abcd',
+          "master",
+          {:reverse => true}
+        ) do |rev|
           revs1 << rev
         end
       end
@@ -327,7 +333,7 @@ class GitAdapterTest < ActiveSupport::TestCase
                           :includes => ['83ca5fd546063a3c7dc2e568ba3355661a9e2b2c',
                                         '92397af84d22f27389c822848ecd5b463c181583'],
                           :excludes => ['95488a44bc25f7d1f97d775a31359539ff333a63',
-                                        '4f26664364207fa8b1af9f8722647ab2d4ac5d43'] }) do |rev|
+                                        '4f26664364207fa8b1af9f8722647ab2d4ac5d43']}) do |rev|
         revs1 << rev
       end
       assert_equal 4, revs1.length
@@ -387,17 +393,20 @@ class GitAdapterTest < ActiveSupport::TestCase
 
     def test_getting_revisions_with_leading_and_trailing_spaces_in_filename
       assert_equal(
-         " filename with a leading space.txt ",
-         @adapter.revisions(" filename with a leading space.txt ",
-                            nil, "master")[0].paths[0][:path])
+        " filename with a leading space.txt ",
+        @adapter.revisions(" filename with a leading space.txt ",
+                           nil, "master")[0].paths[0][:path]
+      )
     end
 
     def test_getting_entries_with_leading_and_trailing_spaces_in_filename
       assert_equal(
-         " filename with a leading space.txt ",
-         @adapter.entries(
-                 '',
-                 '83ca5fd546063a3c7dc2e568ba3355661a9e2b2c')[3].name)
+        " filename with a leading space.txt ",
+        @adapter.entries(
+          '',
+          '83ca5fd546063a3c7dc2e568ba3355661a9e2b2c'
+        )[3].name
+      )
     end
 
     def test_annotate
@@ -613,17 +622,19 @@ class GitAdapterTest < ActiveSupport::TestCase
     end
 
     def test_path_encoding_default_utf8
-      adpt1 = Redmine::Scm::Adapters::GitAdapter.new(
-                                REPOSITORY_PATH
-                              )
+      adpt1 =
+        Redmine::Scm::Adapters::GitAdapter.new(
+          REPOSITORY_PATH
+        )
       assert_equal "UTF-8", adpt1.path_encoding
-      adpt2 = Redmine::Scm::Adapters::GitAdapter.new(
-                                REPOSITORY_PATH,
-                                nil,
-                                nil,
-                                nil,
-                                ""
-                              )
+      adpt2 =
+        Redmine::Scm::Adapters::GitAdapter.new(
+          REPOSITORY_PATH,
+          nil,
+          nil,
+          nil,
+          ""
+        )
       assert_equal "UTF-8", adpt2.path_encoding
     end
 

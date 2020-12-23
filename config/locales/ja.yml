@@ -289,6 +289,7 @@ ja:
   field_password: パスワード
   field_new_password: 新しいパスワード
   field_password_confirmation: パスワードの確認
+  field_twofa_scheme: 二要素認証方式
   field_version: バージョン
   field_type: タイプ
   field_host: ホスト
@@ -299,7 +300,7 @@ ja:
   field_attr_firstname: 名の属性
   field_attr_lastname: 姓の属性
   field_attr_mail: メールアドレスの属性
-  field_onthefly: あわせてユーザーを作成
+  field_onthefly: ユーザーが存在しなければ作成
   field_start_date: 開始日
   field_done_ratio: 進捗率
   field_auth_source: 認証方式
@@ -1322,3 +1323,52 @@ ja:
   field_passwd_changed_on: パスワード更新日
   label_relations_mapping: 関連の対応関係
   label_import_users: ユーザーのインポート
+  setting_twofa: 二要素認証
+  label_optional: 任意
+  label_required_lower: 必須
+  button_disable: 無効化
+  twofa__totp__name: 認証アプリ
+  twofa__totp__text_pairing_info_html: TOTPアプリ (<a href="https://support.google.com/accounts/answer/1066447">Google認証システム</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a> など) でQRコードを読み取るかテキストキーを入力してください。その後、アプリに表示されているコードをこの下の入力欄に入力して二要素認証を有効にしてください。
+  twofa__totp__label_plain_text_key: テキストキー
+  twofa__totp__label_activate: 二要素認証を有効にする
+  twofa_currently_active: '有効 (方式: %{twofa_scheme_name})'
+  twofa_not_active: 無効
+  twofa_label_code: コード
+  twofa_hint_disabled_html: <strong>%{label}</strong> に設定すると全ユーザーの二要素認証を無効にし認証デバイスの関連づけも解除します。
+  twofa_hint_required_html: <strong>%{label}</strong> に設定するとユーザーに対し二要素認証の有効化を次回ログイン時に要求します。
+  twofa_label_setup: 二要素認証の有効化
+  twofa_label_deactivation_confirmation: 二要素認証の無効化
+  twofa_notice_select: 'どの方式で二要素認証を行うか選択してください:'
+  twofa_warning_require: システム管理者が二要素認証を有効にすることを求めています。
+  twofa_activated: 二要素認証が有効になりました。このアカウント用の <a data-method="post" href="%{bc_path}">バックアップコードの生成</a> をお勧めします。
+  twofa_deactivated: 二要素認証が無効になりました。
+  twofa_mail_body_security_notification_paired: "%{field}による二要素認証が有効になりました。"
+  twofa_mail_body_security_notification_unpaired: あなたのアカウントの二要素認証が無効になりました。
+  twofa_mail_body_backup_codes_generated: 二要素認証の新しいバックアップコードが生成されました。
+  twofa_mail_body_backup_code_used: 二要素認証のバックアップコードが使用されました。
+  twofa_invalid_code: 認証コードが無効または期限切れです。
+  twofa_label_enter_otp: 二要素認証の認証コードを入力してください。
+  twofa_too_many_tries: 試行回数が多すぎます。
+  twofa_resend_code: 認証コードの再送信
+  twofa_code_sent: 認証コードを送信しました。
+  twofa_generate_backup_codes: バックアップコードの生成
+  twofa_text_generate_backup_codes_confirmation: この操作は既存のすべてのバックアップコードを無効化して新しく生成します。続行しますか?
+  twofa_notice_backup_codes_generated: バックアップコードを生成しました。
+  twofa_warning_backup_codes_generated_invalidated: 新しいバックアップコードを生成しました。%{time} に生成したバックアップコードは無効になりました。
+  twofa_label_backup_codes: 二要素認証のバックアップコード
+  twofa_text_backup_codes_hint: 二要素認証アプリが利用できないときは以下のコードを認証コードの代わりに使用してください。それぞれのコードは1回だけ使用できます。バックアップコードは印刷して安全な場所に保管しておくことをお勧めします。
+  twofa_text_backup_codes_created_at: "バックアップコード生成日時: %{datetime}"
+  twofa_backup_codes_already_shown: バックアップコードの再表示はできません。必要があれば<a data-method="post" href="%{bc_path}">新しいバックアップコードの生成</a>を行ってください。
+  error_can_not_execute_macro_html: マクロ <strong>%{name}</strong> の実行中にエラーが発生しました (%{error})
+  error_macro_does_not_accept_block: このマクロにはテキストブロックを渡せません
+  error_childpages_macro_no_argument: Wikiページ以外から呼び出す場合は引数が必要です
+  error_circular_inclusion: 挿入対象ページの循環参照
+  error_page_not_found: ページが見つかりません
+  error_filename_required: ファイル名が必要です
+  error_invalid_size_parameter: sizeパラメータが無効です
+  error_attachment_not_found: 添付ファイル %{name} が見つかりません
+  permission_delete_project: プロジェクトの削除
+  text_user_destroy_confirmation: 本当にこのユーザーとこのユーザーへのすべての参照を削除しますか? 削除後は元に戻せません。通常は削除よりロックのほうが適切です。削除する場合は確認のためログインID (%{login}) を入力してください。
+  text_project_destroy_enter_identifier: 確認のためプロジェクト識別子 (%{identifier}) を入力してください。
+  button_add_subtask: 子チケットを追加

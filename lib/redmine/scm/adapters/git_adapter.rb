@@ -87,7 +87,7 @@ module Redmine
               bran = GitBranch.new(scm_iconv('UTF-8', @path_encoding, branch_rev[2]))
               bran.revision =  branch_rev[3]
               bran.scmid    =  branch_rev[3]
-              bran.is_default = ( branch_rev[1] == '*' )
+              bran.is_default = (branch_rev[1] == '*')
               @branches << bran
             end
           end
@@ -190,23 +190,23 @@ module Redmine
           lines = []
           git_cmd(cmd_args) {|io| lines = io.readlines}
           begin
-              id = lines[0].split[1]
-              author = lines[1].match('Author:\s+(.*)$')[1]
-              time = Time.parse(lines[4].match('CommitDate:\s+(.*)$')[1])
-              Revision.
-                new(
-                  {
-                    :identifier => id,
-                    :scmid      => id,
-                    :author     => author,
-                    :time       => time,
-                    :message    => nil,
-                    :paths      => nil
-                  }
-                )
+            id = lines[0].split[1]
+            author = lines[1].match('Author:\s+(.*)$')[1]
+            time = Time.parse(lines[4].match('CommitDate:\s+(.*)$')[1])
+            Revision.
+              new(
+                {
+                  :identifier => id,
+                  :scmid      => id,
+                  :author     => author,
+                  :time       => time,
+                  :message    => nil,
+                  :paths      => nil
+                }
+              )
           rescue NoMethodError => e
-              logger.error("The revision '#{path}' has a wrong format")
-              return nil
+            logger.error("The revision '#{path}' has a wrong format")
+            return nil
           end
         rescue ScmCommandAborted
           nil

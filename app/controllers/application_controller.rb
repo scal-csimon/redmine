@@ -56,7 +56,7 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  before_action :session_expiration, :user_setup, :check_if_login_required, :set_localization, :check_password_change
+  before_action :session_expiration, :user_setup, :check_if_login_required, :set_localization, :check_password_change, :check_twofa_activation
   after_action :record_project_usage
 
   rescue_from ::Unauthorized, :with => :deny_access
@@ -88,6 +88,9 @@ class ApplicationController < ActionController::Base
     session[:tk] = user.generate_session_token
     if user.must_change_password?
       session[:pwd] = '1'
+    end
+    if user.must_activate_twofa?
+      session[:must_activate_twofa] = '1'
     end
   end
 
@@ -191,6 +194,7 @@ class ApplicationController < ActionController::Base
   def check_if_login_required
     # no check needed if user is already logged in
     return true if User.current.logged?
+
     require_login if Setting.login_required?
   end
 
@@ -201,6 +205,31 @@ class ApplicationController < ActionController::Base
         redirect_to my_password_path
       else
         session.delete(:pwd)
+      end
+    end
+  end
+
+  def init_twofa_pairing_and_send_code_for(twofa)
+    twofa.init_pairing!
+    if twofa.send_code(controller: 'twofa', action: 'activate')
+      flash[:notice] = l('twofa_code_sent')
+    end
+    redirect_to controller: 'twofa', action: 'activate_confirm', scheme: twofa.scheme_name
+  end
+
+  def check_twofa_activation
+    if session[:must_activate_twofa]
+      if User.current.must_activate_twofa?
+        flash[:warning] = l('twofa_warning_require')
+        if Redmine::Twofa.available_schemes.length == 1
+          twofa_scheme = Redmine::Twofa.for_twofa_scheme(Redmine::Twofa.available_schemes.first)
+          twofa = twofa_scheme.new(User.current)
+          init_twofa_pairing_and_send_code_for(twofa)
+        else
+          redirect_to controller: 'twofa', action: 'select_scheme'
+        end
+      else
+        session.delete(:must_activate_twofa)
       end
     end
   end
@@ -230,25 +259,25 @@ class ApplicationController < ActionController::Base
         url = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id], :project_id => params[:project_id])
       end
       respond_to do |format|
-        format.html {
+        format.html do
           if request.xhr?
             head :unauthorized
           else
             redirect_to signin_path(:back_url => url)
           end
-        }
-        format.any(:atom, :pdf, :csv) {
+        end
+        format.any(:atom, :pdf, :csv) do
           redirect_to signin_path(:back_url => url)
-        }
-        format.api  {
+        end
+        format.api do
           if Setting.rest_api_enabled? && accept_api_auth?
             head(:unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"')
           else
             head(:forbidden)
           end
-        }
-        format.js   { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
-        format.any  { head :unauthorized }
+        end
+        format.js   {head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"'}
+        format.any  {head :unauthorized}
       end
       return false
     end
@@ -257,6 +286,7 @@ class ApplicationController < ActionController::Base
 
   def require_admin
     return unless require_login
+
     if !User.current.admin?
       render_403
       return false
@@ -347,6 +377,7 @@ class ApplicationController < ActionController::Base
     # if the issue actually exists but requires authentication
     @issue = Issue.find(params[:id])
     raise Unauthorized unless @issue.visible?
+
     @project = @issue.project
   rescue ActiveRecord::RecordNotFound
     render_404
@@ -363,6 +394,7 @@ class ApplicationController < ActionController::Base
       to_a
     raise ActiveRecord::RecordNotFound if @issues.empty?
     raise Unauthorized unless @issues.all?(&:visible?)
+
     @projects = @issues.collect(&:project).compact.uniq
     @project = @projects.first if @projects.size == 1
   rescue ActiveRecord::RecordNotFound
@@ -380,10 +412,10 @@ class ApplicationController < ActionController::Base
   end
 
   def parse_params_for_bulk_update(params)
-    attributes = (params || {}).reject {|k,v| v.blank?}
+    attributes = (params || {}).reject {|k, v| v.blank?}
     attributes.keys.each {|k| attributes[k] = '' if attributes[k] == 'none'}
     if custom = attributes[:custom_field_values]
-      custom.reject! {|k,v| v.blank?}
+      custom.reject! {|k, v| v.blank?}
       custom.keys.each do |k|
         if custom[k].is_a?(Array)
           custom[k] << '' if custom[k].delete('__none__')
@@ -463,6 +495,7 @@ class ApplicationController < ActionController::Base
       if uri.send(component).present? && uri.send(component) != request.send(component)
         return false
       end
+
       uri.send(:"#{component}=", nil)
     end
     # Always ignore basic user:password in the URL
@@ -529,10 +562,10 @@ class ApplicationController < ActionController::Base
     @status = arg[:status] || 500
 
     respond_to do |format|
-      format.html {
+      format.html do
         render :template => 'common/error', :layout => use_layout, :status => @status
-      }
-      format.any { head @status }
+      end
+      format.any {head @status}
     end
   end
 
@@ -547,6 +580,7 @@ class ApplicationController < ActionController::Base
   # but have no HTML representation for non admin users
   def require_admin_or_api_request
     return true if api_request?
+
     if User.current.admin?
       true
     elsif User.current.logged?
@@ -565,7 +599,7 @@ class ApplicationController < ActionController::Base
 
   def render_feed(items, options={})
     @items = (items || []).to_a
-    @items.sort! {|x,y| y.event_datetime <=> x.event_datetime }
+    @items.sort! {|x, y| y.event_datetime <=> x.event_datetime}
     @items = @items.slice(0, Setting.feeds_limit.to_i)
     @title = options[:title] || Setting.app_title
     render :template => "common/feed", :formats => [:atom], :layout => false,
@@ -641,13 +675,13 @@ class ApplicationController < ActionController::Base
     tmp = []
     if value
       parts = value.split(/,\s*/)
-      parts.each {|part|
+      parts.each do |part|
         if m = %r{^([^\s,]+?)(?:;\s*q=(\d+(?:\.\d+)?))?$}.match(part)
           val = m[1]
           q = (m[2] or 1).to_f
           tmp.push([val, q])
         end
-      }
+      end
       tmp = tmp.sort_by{|val, q| -q}
       tmp.collect!{|val, q| val}
     end

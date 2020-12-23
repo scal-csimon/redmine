@@ -31,15 +31,17 @@ class ContextMenusController < ApplicationController
 
     @allowed_statuses = @issues.map(&:new_statuses_allowed_to).reduce(:&)
 
-    @can = {:edit => @issues.all?(&:attributes_editable?),
-            :log_time => (@project && User.current.allowed_to?(:log_time, @project)),
-            :copy => User.current.allowed_to?(:copy_issues, @projects) && Issue.allowed_target_projects.any?,
-            :add_watchers => User.current.allowed_to?(:add_issue_watchers, @projects),
-            :delete => @issues.all?(&:deletable?)
-            }
+    @can = {
+      :edit => @issues.all?(&:attributes_editable?),
+      :log_time => (@project && User.current.allowed_to?(:log_time, @project)),
+      :copy => User.current.allowed_to?(:copy_issues, @projects) && Issue.allowed_target_projects.any?,
+      :add_watchers => User.current.allowed_to?(:add_issue_watchers, @projects),
+      :delete => @issues.all?(&:deletable?),
+      :add_subtask => @issue && !@issue.closed? && User.current.allowed_to?(:manage_subtasks, @project)
+    }
 
     @assignables = @issues.map(&:assignable_users).reduce(:&)
-    @trackers = @projects.map {|p| Issue.allowed_target_trackers(p) }.reduce(:&)
+    @trackers = @projects.map {|p| Issue.allowed_target_trackers(p)}.reduce(:&)
     @versions = @projects.map {|p| p.shared_versions.open}.reduce(:&)
 
     @priorities = IssuePriority.active.reverse
