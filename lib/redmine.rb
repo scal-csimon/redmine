@@ -238,7 +238,7 @@ Redmine::MenuManager.map :application_menu do |menu|
   )
   menu.push(
     :time_entries,
-    {:controller => 'timelog', :action => 'index'},
+    {:controller => 'timelog', :action => 'report'},
     :if =>
       Proc.new do
         User.current.allowed_to?(:view_time_entries, nil, :global => true) &&
@@ -385,7 +385,7 @@ Redmine::MenuManager.map :project_menu do |menu|
       end,
     :permission => :add_issues
   )
-  menu.push :time_entries, {:controller => 'timelog', :action => 'index'},
+  menu.push :time_entries, {:controller => 'timelog', :action => 'report'},
             :param => :project_id, :caption => :label_spent_time
   menu.push :gantt, {:controller => 'gantts', :action => 'show'},
             :param => :project_id, :caption => :label_gantt
