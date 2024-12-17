@@ -1,0 +1,17 @@
+current directory: C:/Users/Charly/source/repos/scal/redmine/vendor/bundle/ruby/2.6.0/gems/debug-1.8.0/ext/debug
+C:/Ruby26-x64/bin/ruby.exe -I C:/Ruby26-x64/lib/ruby/2.6.0 -r ./siteconf20241216-39600-qx4t7v.rb extconf.rb
+creating Makefile
+
+current directory: C:/Users/Charly/source/repos/scal/redmine/vendor/bundle/ruby/2.6.0/gems/debug-1.8.0/ext/debug
+make "DESTDIR=" clean
+
+current directory: C:/Users/Charly/source/repos/scal/redmine/vendor/bundle/ruby/2.6.0/gems/debug-1.8.0/ext/debug
+make "DESTDIR="
+generating debug-x64-mingw32.def
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.so
+
+current directory: C:/Users/Charly/source/repos/scal/redmine/vendor/bundle/ruby/2.6.0/gems/debug-1.8.0/ext/debug
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20241216-39600-hyaaa3/debug

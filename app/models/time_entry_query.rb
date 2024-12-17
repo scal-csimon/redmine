@@ -36,6 +36,7 @@ class TimeEntryQuery < Query
     QueryAssociationColumn.new(:issue, :fixed_version, :caption => :field_fixed_version, :sortable => Version.fields_for_order_statement),
     QueryColumn.new(:comments),
     QueryColumn.new(:hours, :sortable => "#{TimeEntry.table_name}.hours", :totalable => true),
+    QueryColumn.new(:ceilling_hours, :sortable => "#{TimeEntry.table_name}.ceilling_hours", :totalable => true),
   ]
 
   def initialize(attributes=nil, *args)

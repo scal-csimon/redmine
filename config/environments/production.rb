@@ -24,4 +24,6 @@ Rails.application.configure do
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
+  # Added by mickey 
+  #config.assets.compile = true
 end

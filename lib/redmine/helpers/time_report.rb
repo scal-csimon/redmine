@@ -20,9 +20,9 @@
 module Redmine
   module Helpers
     class TimeReport
-      attr_reader :criteria, :columns, :hours, :total_hours, :periods
+      attr_reader :criteria, :columns, :hours, :total_hours, :periods, :ceilling_hours
 
-      def initialize(project, issue, criteria, columns, time_entry_scope)
+      def initialize(project, issue, criteria, columns, time_entry_scope, ceilling_hours)
         @project = project
         @issue = issue
 
@@ -33,7 +33,7 @@ module Redmine
 
         @columns = (columns && %w(year month week day).include?(columns)) ? columns : 'month'
         @scope = time_entry_scope
-
+        @ceilling_hours = ceilling_hours
         run
       end
 
@@ -47,17 +47,20 @@ module Redmine
         unless @criteria.empty?
           time_columns = %w(tyear tmonth tweek spent_on)
           @hours = []
-          @scope.includes(:activity).
-              reorder(nil).
-              group(@criteria.collect{|criteria| @available_criteria[criteria][:sql]} + time_columns).
-              joins(@criteria.collect{|criteria| @available_criteria[criteria][:joins]}.compact).
-              sum(:hours).each do |hash, hours|
-            h = {'hours' => hours}
-            (@criteria + time_columns).each_with_index do |name, i|
-              h[name] = hash[i]
-            end
-            @hours << h
-          end
+
+            result_hours = @scope.includes(:activity).
+            reorder(nil).
+            group(@criteria.collect{|criteria| @available_criteria[criteria][:sql]} + time_columns).
+            joins(@criteria.collect{|criteria| @available_criteria[criteria][:joins]}.compact)
+
+          
+          result_hours.each do |hash, ceilling_hours|
+                h = {'hours' => ceilling_hours}
+                (@criteria + time_columns).each_with_index do |name, i|
+                  h[name] = hash[i]
+                end
+                @hours << h
+              end
 
           @hours.each do |row|
             case @columns
@@ -94,7 +97,7 @@ module Redmine
               date_from = (date_from + 1.month).at_beginning_of_month
             when 'week'
               @periods << "#{date_from.to_date.cwyear}-#{date_from.to_date.cweek}"
-              date_from = (date_from + 7.day).at_beginning_of_week
+              date_from = (date_from + 7.day).at_beginning_of_week(start_day = :sunday)
             when 'day'
               @periods << "#{date_from.to_date}"
               date_from = date_from + 1.day

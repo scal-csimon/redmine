@@ -181,6 +181,15 @@ class TimeEntry < ActiveRecord::Base
     end
   end
 
+  def ceilling_hours
+    h = read_attribute(:hours)
+    if h.is_a?(Float)
+      (h/0.25).ceil()*0.25
+    else
+      10
+    end
+  end
+
   # tyear, tmonth, tweek assigned where setting spent_on attributes
   # these attributes make time aggregations easier
   def spent_on=(date)

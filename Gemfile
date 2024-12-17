@@ -10,7 +10,7 @@ gem 'request_store', '~> 1.5.0'
 gem "mini_mime", "~> 1.0.1"
 gem "actionpack-xml_parser"
 gem 'roadie-rails', (RUBY_VERSION < '2.5' ? '~> 1.3.0' : '~> 2.2.0')
-gem "mimemagic"
+gem 'mimemagic'
 gem "mail", "~> 2.7.1"
 gem 'csv', (RUBY_VERSION < '2.5' ? ['>= 3.1.1', '<= 3.1.5'] : '~> 3.1.1')
 gem "nokogiri", "~> 1.10.0"
@@ -18,6 +18,7 @@ gem 'i18n', '~> 1.8.2'
 gem "rbpdf", "~> 1.20.0"
 gem 'addressable'
 gem 'rubyzip', '~> 2.3.0'
+gem "loofah", "< 2.21.0" 
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :x64_mingw, :mswin]
@@ -59,7 +60,7 @@ if File.exist?(database_file)
     adapters.each do |adapter|
       case adapter
       when 'mysql2'
-        gem "mysql2", "~> 0.5.0", :platforms => [:mri, :mingw, :x64_mingw]
+        gem "mysql2", "~> 0.5.6", :platforms => [:mri, :mingw, :x64_mingw]
       when /postgresql/
         gem "pg", "~> 1.2.2", :platforms => [:mri, :mingw, :x64_mingw]
       when /sqlite3/
@@ -80,6 +81,8 @@ end
 
 group :development do
   gem "yard"
+  gem "debug"
+  gem 'irb', '~> 1.6', '>= 1.6.3'
 end
 
 group :test do

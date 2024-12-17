@@ -340,7 +340,8 @@ module QueriesHelper
           :group_by => @query.group_by,
           :column_names => @query.column_names,
           :totalable_names => @query.totalable_names,
-          :sort => @query.sort_criteria.to_a
+          :sort => @query.sort_criteria.to_a,
+          :ceilling_hours => @query.ceilling_hours
         }
       end
     else
@@ -354,7 +355,8 @@ module QueriesHelper
           :group_by => session[session_key][:group_by],
           :column_names => session[session_key][:column_names],
           :totalable_names => session[session_key][:totalable_names],
-          :sort_criteria => session[session_key][:sort]
+          :sort_criteria => session[session_key][:sort],
+          :ceilling_hours => session[session_key][:ceilling_hours]
         )
       @query.project = @project
     end

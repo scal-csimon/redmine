@@ -2,9 +2,14 @@
 <%= link_to l(:button_log_time),
             _new_time_entry_path(@project, @issue),
             :class => 'icon icon-time-add' if User.current.allowed_to?(:log_time, @project, :global => true) %>
-<%= link_to_if_authorized l(:label_settings),
+
+<%= actions_dropdown do %>
+	<%= link_to_if_authorized l(:label_settings),
             {:controller => 'projects', :action => 'settings', :id => @project, :tab => 'activities'},
             :class => 'icon icon-settings' if User.current.allowed_to?(:manage_project_activities, @project) %>
+
+<% end %>
+
 </div>
 
 <h2><%= @query.new_record? ? l(:label_spent_time) : @query.name %></h2>
@@ -13,7 +18,6 @@
   <% @report.criteria.each do |criterion| %>
     <%= hidden_field_tag 'criteria[]', criterion, :id => nil %>
   <% end %>
-  <%= render :partial => 'timelog/date_range' %>
 
   <p><label for='columns'><%= l(:label_details) %></label>: <%= select_tag 'columns', options_for_select([[l(:label_year), 'year'],
                                                                             [l(:label_month), 'month'],
@@ -27,16 +31,18 @@
                                                           :disabled => (@report.criteria.length >= 3),
                                                           :id => "criterias") %>
      <%= link_to l(:button_clear), {:params => request.query_parameters.merge(:criteria => nil)}, :class => 'icon icon-reload' %></p>
-  <%= hidden_field_tag 'encoding', l(:general_csv_encoding) unless l(:general_csv_encoding).casecmp('UTF-8') == 0 %>
-<% end %>
+  	<%= hidden_field_tag 'encoding', l(:general_csv_encoding) unless l(:general_csv_encoding).casecmp('UTF-8') == 0 %>
 
+<% end %>
+<span> test_logs</span>
 <% if @query.valid? %>
 <% unless @report.criteria.empty? %>
 <% if @report.hours.empty? %>
 <p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
 <div class="autoscroll">
-<table class="list" id="time-report">
+<span> test_logs <%= @report.hours.to_a %></span>
+<table class="list" id="time-report-test">
 <thead>
 <tr>
 <% @report.criteria.each do |criteria| %>
@@ -50,6 +56,7 @@
 </tr>
 </thead>
 <tbody>
+
 <%= render :partial => 'report_criteria', :locals => {:criterias => @report.criteria, :hours => @report.hours, :level => 0} %>
   <tr class="total">
   <td><%= l(:label_total_time) %></td>
