@@ -334,7 +334,7 @@ fr:
   field_start_page: Page de démarrage
   field_subproject: Sous-projet
   field_hours: Heures Interne 
-  field_hours_ceilling: Heures
+  field_ceilling_hours: Heures
   field_activity: Activité
   field_spent_on: Date
   field_identifier: Identifiant
