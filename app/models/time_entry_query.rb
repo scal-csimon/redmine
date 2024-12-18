@@ -36,6 +36,7 @@ class TimeEntryQuery < Query
     QueryAssociationColumn.new(:issue, :fixed_version, :caption => :field_fixed_version, :sortable => Version.fields_for_order_statement),
     QueryColumn.new(:comments),
     QueryColumn.new(:hours, :sortable => "#{TimeEntry.table_name}.hours", :totalable => true),
+    QueryColumn.new(:ceilling_hours, :sortable => "#{TimeEntry.table_name}.ceilling_hours", :totalable => true),
   ]
 
   def initialize(attributes=nil, *args)
@@ -162,6 +163,10 @@ class TimeEntryQuery < Query
   # Returns sum of all the spent hours
   def total_for_hours(scope)
     map_total(scope.sum(:hours)) {|t| t.to_f.round(2)}
+  end
+
+  def total_for_ceilling_hours(scope)
+    map_total(scope.sum(:ceilling_hours)) {|t| t.to_f.round(0)}
   end
 
   def sql_for_issue_id_field(field, operator, value)

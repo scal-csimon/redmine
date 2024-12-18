@@ -53,6 +53,9 @@
         <p class="totable_columns"><label><%= l(:label_total_plural) %></label>
         <%= available_totalable_columns_tags(@query) %></p>
       <% end %>
+  	
+  		 <p class="totable_columns"><label>Heures réelles</label>
+         <%=content_tag('Heures réelles', check_box_tag('real_hours', 'real_hours', query.totalable_columns.include?(column), :id => nil) + 'Heures réelles' , :class => 'inline') %>
     <% else %>
       <p><label><%= l(:button_show) %></label>
       <%= hidden_field_tag 'query[draw_relations]', '0' %>
