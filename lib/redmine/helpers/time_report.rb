@@ -54,8 +54,8 @@ module Redmine
             joins(@criteria.collect{|criteria| @available_criteria[criteria][:joins]}.compact)
 
           
-          result_hours.each do |hash, ceilling_hours|
-                h = {'hours' => ceilling_hours}
+          result_hours.each do |hash, hours|
+                h = {'hours' => hours}
                 (@criteria + time_columns).each_with_index do |name, i|
                   h[name] = hash[i]
                 end

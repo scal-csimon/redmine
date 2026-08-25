@@ -68,6 +68,14 @@ module TimelogHelper
     sum
   end
 
+  def sum_ceilling_hours(data)
+    sum = 0
+    data.each do |row|
+      sum += row['ceilling_hours'].to_f
+    end
+    sum
+  end
+
   def format_criteria_value(criteria_options, value, html=true)
     if value.blank?
       "[#{l(:label_none)}]"
